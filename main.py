@@ -38,26 +38,64 @@ async def add_security_headers(request, call_next):
 
 @app.exception_handler(HTTPException)
 def http_exception_handler(_, exc: HTTPException):
-    logger.error(exc.detail)
-    return JSONResponse(exc.detail, status_code=exc.status_code)
+    """
+    Handle HTTP exceptions and return a structured error response.
+
+    Args:
+        exc (HTTPException): The HTTP exception raised.
+
+    Returns:
+        JSONResponse: A structured JSON response with error details.
+    """
+    logger.error("HTTPException: %s | Status Code: %d", exc.detail, exc.status_code)
+    return JSONResponse(
+        {"error": {"type": "HTTPException", "detail": exc.detail}},
+        status_code=exc.status_code,
+    )
 
 
 @app.exception_handler(RequestValidationError)
 def validation_exception_handler(_, exc: RequestValidationError):
-    first_error = exc.errors()[0]
-    field = " ".join(str(loc) for loc in first_error["loc"])
-    message = first_error.get("msg", "Invalid input")
-    error_message = f"{field}, {message}"
+    """
+    Handle validation errors and return a structured error response.
 
-    logger.error(error_message)
-    return JSONResponse({"error": error_message}, status_code=400)
+    Args:
+        exc (RequestValidationError): The validation error raised.
+
+    Returns:
+        JSONResponse: A structured JSON response with error details.
+    """
+    first_error = exc.errors()[0]
+    field = " -> ".join(str(loc) for loc in first_error["loc"])
+    message = first_error.get("msg", "Invalid input")
+    error_message = f"Field: {field}, Message: {message}"
+
+    logger.error("Validation Error: %s", error_message)
+    return JSONResponse(
+        {"error": {"type": "ValidationError", "field": field, "message": message}},
+        status_code=422,
+    )
 
 
 @app.exception_handler(Exception)
 def internal_exception_handler(_, exc: Exception):
-    logger.exception(exc)
+    """
+    Handle unexpected exceptions and return a generic error response.
+
+    Args:
+        exc (Exception): The unexpected exception raised.
+
+    Returns:
+        JSONResponse: A structured JSON response with error details.
+    """
+    logger.exception("Unhandled Exception: %s", exc)
     return JSONResponse(
-        {"error": "Oops! Something went wrong. Please try again later."},
+        {
+            "error": {
+                "type": "InternalServerError",
+                "message": "An unexpected error occurred. Please try again later.",
+            }
+        },
         status_code=500,
     )
 

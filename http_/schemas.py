@@ -1,31 +1,32 @@
-"""API Schemas"""
+"""API Schemas."""
 
 from typing import Optional
-from pydantic import BaseModel
+from sqlmodel import SQLModel
 
 
-class UserCreateRequestV1(BaseModel):
-    username: str
-    password: str
+class v1:
+    class UserCreateRequest(SQLModel):
+        username: str
+        password: str
 
+    class UserResponse(SQLModel):
+        id: int
+        username: str
+        created_at: Optional[str] = None  # Added for documentation/response
 
-class UserCreateResponseV1(BaseModel):
-    username: str
-    password: str
+    class UserUpdateRequest(SQLModel):
+        username: Optional[str] = None
+        password: Optional[str] = None
 
+    class ExchangeCreateRequest(SQLModel):
+        name: str
+        type: str
+        vhost: str
+        durable: bool = True
 
-class ExchangeCreateRequestV1(BaseModel):
-    name: str
-    type: str
-    vhost: str
-    durable: bool = True
-
-
-class ExchangeCreateResponseV1(BaseModel):
-    name: str
-
-
-class ErrorResponse(BaseModel):
-    """Response model for errors."""
-
-    error: str
+    class ExchangeCreateResponse(SQLModel):
+        name: str
+        type: str
+        vhost: str
+        durable: bool
+        created_at: Optional[str] = None  # Added for documentation/response
